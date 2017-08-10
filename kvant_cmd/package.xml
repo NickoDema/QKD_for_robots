@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package>
-  <name>Kvant_cmd</name>
-  <version>0.0.0</version>
-  <description>The Kvant_cmd package</description>
+  <name>kvant_cmd</name>
+  <version>0.0.1</version>
+  <description>The kvant_cmd package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="ram@todo.todo">ram</maintainer>
+  <maintainer email="Nicko_Dema@protonmail.com">Nikolay Dema</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -41,8 +41,10 @@
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>geometry_msgs</build_depend>
+  <build_depend>kvant_joy</build_depend>
   <build_depend>roscpp</build_depend>
   <run_depend>geometry_msgs</run_depend>
+  <run_depend>kvant_joy</run_depend>
   <run_depend>roscpp</run_depend>
 
 
