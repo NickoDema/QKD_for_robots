@@ -7,22 +7,34 @@
  *              Robotics Engineering Department
  */
 
-#include kvant_cmd.h
+#include "kvant_cmd.h"
 
 kvant_Decoder::kvant_Decoder(std::string path): nh_("~")
 {
     if (!getkey(path))
     {
-        ROS_INFO("Can't open %s", path);
+        ROS_INFO("Can't open %s", path.c_str());
+        exit(-1);
     }
+    //encrypt_sub = nh_.subscribe("/kvant_joy", 1, &kvant_Decoder::encrypt_cb, this);
 }
 
-bool getkey(std::string path)
+bool kvant_Decoder::getkey(std::string path)
 {
-    ifstream kfile(path, ios::binary | ios::ate);
-    size_t kfile_size = kfile.tellg();
+    std::ifstream keyF(path, std::ios::binary | std::ios::ate);
+    size_t keyF_size = keyF.tellg();
+    keyF.seekg(0, std::ios::beg);
+    key.resize(keyF_size);
+    keyF.read( (char*)&key[0], keyF_size);
 
-    key =
+    for (size_t i = 0; i < keyF_size; ++i)
+    {
+        std::string str;
+        str = std::to_string(key[i]);
+        ROS_INFO(" %s %.2X", str.c_str(), key[i]);
+    }
+
+    return true;
 }
 
 int main(int argc, char** argv)
@@ -36,7 +48,7 @@ int main(int argc, char** argv)
     kvant_Decoder vel_decoder("/home/ram/programming/ROS/catkin_ws/src"
                               "/kvant/kvant_cmd/keys/00024b1f_Alice.key");
     //}
-    vel_decoder.spin();
+    //vel_decoder.spin();
 
     return 0;
 }
