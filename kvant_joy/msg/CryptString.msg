@@ -1,1 +1,1 @@
-string crypt_string
+uint8[] crypt_string
