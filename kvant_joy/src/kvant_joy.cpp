@@ -12,6 +12,12 @@ ros::Publisher pub;
 char KEY_FILE_NAME[] = "/home/kirix/rosws/src/kvant/kvant_joy/key/00024b1f_Alice.key";
 static int SHIFT = 1;
 
+/*
+  Encrypting/Decrypting Function
+  _data: array with data
+  _fn: key file name
+  return: vector with encrypted/decrypted data
+*/
 std::vector<unsigned char> XOR(unsigned char *_data, char *_fn)
 {
   size_t data_size = 25;
@@ -44,6 +50,9 @@ std::vector<unsigned char> XOR(unsigned char *_data, char *_fn)
   return ret;
 }
 
+/*
+  Function for convert float to string
+*/
 std::string fts(float number) {
     std::ostringstream buff;
     buff << number;
@@ -62,15 +71,9 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
   // creating string with commands from gamepad
   // as "-0.23 0.01 -0.00"
   int size_data = 25;
-	char data[size_data];
-	sprintf(data, "%.2f %.2f %.2f", left_x, left_y, right_x);
+  char data[size_data];
+  sprintf(data, "%.2f %.2f %.2f", left_x, left_y, right_x);
   unsigned char *udata = reinterpret_cast<unsigned char*>(data);
-
-  // unsigned char udata[size_data];
-	// for(int i = 0; i < size_data; i++) {
-	// 	udata[i] = static_cast<unsigned char>(data[i]);
-	// 	if (udata[i] == '\0') break;
-	// }
 
   std::clog << "raw data: " << udata << std::endl;
 
@@ -101,7 +104,6 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "listener_joy");
   ros::NodeHandle n;
-
   sub = n.subscribe("joy", 100, joyCallback);
   pub = n.advertise<kvant_joy::CryptString>("kvant_joy", 100);
   ros::spin();
