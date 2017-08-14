@@ -9,7 +9,7 @@ project(kvant_cmd)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
-#  kvant_joy
+  kvant_joy
   roscpp
 )
 
