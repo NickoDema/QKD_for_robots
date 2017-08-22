@@ -17,7 +17,7 @@
 ros::Subscriber sub;
 ros::Publisher pub;
 
-char KEY_FILE_NAME[] = "/home/kirix/rosws/src/kvant/kvant_master/key/00024b1f_Alice.key";
+char KEY_FILE_NAME[] = "/home/ram/programming/ROS/catkin_ws/src/kvant/kvant_master/key/00024b1f_Alice.key";
 static int SHIFT = 0;
 static int COUNT = 0;
 

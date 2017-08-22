@@ -1,5 +1,5 @@
 /*
- *  kvant_cmd.h
+ *  kvant_slave.h
  *
  *  Created on: 10.08.2017
  *       Email: Nicko_Dema@protonmail.com
@@ -7,8 +7,8 @@
  *              Robotics Engineering Department
  */
 
-#ifndef KVANT_CMD_
-#define KVANT_CMD_
+#ifndef KVANT_SLAVE_
+#define KVANT_SLAVE_
 
 #include <iostream>
 #include <fstream>
@@ -18,7 +18,7 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-#include <kvant_joy/CryptString.h>
+#include <kvant_master/CryptString.h>
 
 
 class kvant_Decoder
@@ -34,7 +34,7 @@ class kvant_Decoder
         ros::Publisher cmd_vel_pub;
         ros::Subscriber encrypt_sub;
 
-        void encrypt_cb(const kvant_joy::CryptStringConstPtr&);
+        void encrypt_cb(const kvant_master::CryptStringConstPtr&);
         //std::string unencrypt(std::string);
         bool getkey(std::string);
 
@@ -42,4 +42,4 @@ class kvant_Decoder
         int pos_counter;
 };
 
-#endif /*KVANT_CMD*/
+#endif /*KVANT_SLAVE_*/

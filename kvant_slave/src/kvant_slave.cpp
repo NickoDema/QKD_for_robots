@@ -1,5 +1,5 @@
 /*
- *  kvant_cmd_node.cpp
+ *  kvant_slave.cpp
  *
  *  Created on: 10.08.2017
  *       Email: Nicko_Dema@protonmail.com
@@ -7,7 +7,7 @@
  *              Robotics Engineering Department
  */
 
-#include "kvant_cmd.h"
+#include "kvant_slave.h"
 
 kvant_Decoder::kvant_Decoder(std::string path): nh_("~")
 {
@@ -16,7 +16,7 @@ kvant_Decoder::kvant_Decoder(std::string path): nh_("~")
         ROS_INFO("Can't open %s", path.c_str());
         exit(-1);
     }
-    encrypt_sub = nh_.subscribe("/kvant_joy", 10, &kvant_Decoder::encrypt_cb, this);
+    encrypt_sub = nh_.subscribe("/kvant_master", 10, &kvant_Decoder::encrypt_cb, this);
     cmd_vel_pub = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
 }
 
@@ -39,10 +39,10 @@ bool kvant_Decoder::getkey(std::string path)
     return true;
 }
 
-void kvant_Decoder::encrypt_cb(const kvant_joy::CryptStringConstPtr& msg)
+void kvant_Decoder::encrypt_cb(const kvant_master::CryptStringConstPtr& msg)
 {
     static int count = 0;
-    ROS_INFO("id %d", msg->id);
+    //ROS_INFO("id %d", msg->id);
 
     float vels[3];
     std::vector<unsigned char> data_v;
@@ -101,20 +101,4 @@ void kvant_Decoder::spin()
 
         R.sleep();
     }
-}
-
-int main(int argc, char** argv)
-{
-    ros::init(argc, argv, "decoder");
-    // if (argc >= 1) {
-    //     kvant_Decoder vel_decoder(argv[1]);
-    // }
-    // else
-    // {
-    kvant_Decoder vel_decoder("/home/ram/programming/ROS/catkin_ws/src"
-                              "/kvant/kvant_cmd/keys/00024b1f_Alice.key");
-    //}
-    vel_decoder.spin();
-
-    return 0;
 }
