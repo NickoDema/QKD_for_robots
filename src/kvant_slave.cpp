@@ -7,20 +7,20 @@
  *              Robotics Engineering Department
  */
 
-#include "kvant_slave.h"
+#include "kvant.h"
 
-kvant_Decoder::kvant_Decoder(std::string path): nh_("~")
+Slave::Slave(std::string path): nh_("~")
 {
     if (!getkey(path))
     {
         ROS_INFO("Can't open %s", path.c_str());
         exit(-1);
     }
-    encrypt_sub = nh_.subscribe("/kvant_master", 10, &kvant_Decoder::encrypt_cb, this);
+    encrypt_sub = nh_.subscribe("/open_channel", 10, &Slave::encrypt_cb, this);
     cmd_vel_pub = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
 }
 
-bool kvant_Decoder::getkey(std::string path)
+bool Slave::getkey(std::string path)
 {
     std::ifstream keyF(path, std::ios::binary | std::ios::ate);
     size_t keyF_size = keyF.tellg();
@@ -39,7 +39,7 @@ bool kvant_Decoder::getkey(std::string path)
     return true;
 }
 
-void kvant_Decoder::encrypt_cb(const kvant_master::CryptStringConstPtr& msg)
+void Slave::encrypt_cb(const kvant::CryptStringConstPtr& msg)
 {
     static int count = 0;
     //ROS_INFO("id %d", msg->id);
@@ -91,7 +91,7 @@ void kvant_Decoder::encrypt_cb(const kvant_master::CryptStringConstPtr& msg)
     cmd_vel_pub.publish(cmd_msg);
 }
 
-void kvant_Decoder::spin()
+void Slave::spin()
 {
     ros::Rate R(20);
     while(nh_.ok())

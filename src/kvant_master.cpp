@@ -1,23 +1,17 @@
 /*
- *  kvant_cmd_node.cpp
+ *  kvant_master.cpp
  *
  *  Created on: 10.08.2017
  *       Email: Nicko_Dema@protonmail.com
  *              ITMO University
  *              Robotics Engineering Department
  */
-#include <iostream>
-#include <fstream>
-#include <string>
-
-#include "ros/ros.h"
-#include "sensor_msgs/Joy.h"
-#include "kvant_master/CryptString.h"
+#include "kvant.h"
 
 ros::Subscriber sub;
 ros::Publisher pub;
 
-char KEY_FILE_NAME[] = "/home/ram/programming/ROS/catkin_ws/src/kvant/kvant_master/key/00024b1f_Alice.key";
+char KEY_FILE_NAME[] = "/home/ram/programming/ROS/catkin_ws/src/kvant/key/00024b1f_Alice.key";
 static int SHIFT = 0;
 static int COUNT = 0;
 
@@ -112,7 +106,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
     std::clog << "raw data: " << udata << std::endl;
 
     // make message for ros
-    kvant_master::CryptString crmsg;
+    kvant::CryptString crmsg;
 
     // encrypt
     std::clog << SHIFT << std::endl;
@@ -152,10 +146,10 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "listener_joy");
+  ros::init(argc, argv, "master");
   ros::NodeHandle n;
   sub = n.subscribe("joy", 10, joyCallback);
-  pub = n.advertise<kvant_master::CryptString>("kvant_master", 10);
+  pub = n.advertise<kvant::CryptString>("open_channel", 10);
   // ros::Duration(1).sleep();
 
   ros::Rate R(20);
