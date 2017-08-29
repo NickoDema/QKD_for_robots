@@ -2,154 +2,100 @@
  *  kvant_master.cpp
  *
  *  Created on: 10.08.2017
- *       Email: Nicko_Dema@protonmail.com
+ *       Email: kaartemov@gmail.com
  *              ITMO University
  *              Robotics Engineering Department
  */
 #include "kvant.h"
 
-ros::Subscriber sub;
-ros::Publisher pub;
-
-char KEY_FILE_NAME[] = "/home/ram/programming/ROS/catkin_ws/src/kvant/key/00024b1f_Alice.key";
-static int SHIFT = 0;
-static int COUNT = 0;
-
 /*
-  Encrypting/Decrypting Function
-  _data: array with data
-  _fn: key file name
-  return: vector with encrypted/decrypted data
+  В зависимости от сценария работа (определяется геймпадом) формирует data
+  Возможны четыре сценария:
+  L|cmd|T
+  L|cmd
+  L|T
+  - --- возвращается пустой вектор
 */
-std::vector<unsigned char> XOR(unsigned char *_data, char *_fn)
-{
-  size_t data_size = 25;
-  size_t fsize;
-  //TODO: сделать проверку _data.size <= _fn.size
-  //TODO: использовать файл ключа по кругу - для этого использовать static-переменную текущей позиции
-
-  using namespace std;
-  // reading key
-  vector<unsigned char> key;
-  ifstream _if(_fn, ios::binary);
-  if (_if.is_open()) {
-    _if.seekg(0, ios::end);
-    fsize = _if.tellg();
-    _if.seekg(0, ios::beg);
-    key.resize(fsize);
-    _if.read((char*) &key[0], fsize);
-  } else {
-    clog << "Opening key-file faild!" << endl;
-  }
-
-  // encrypting
-  vector<unsigned char> ret(data_size);
-
-  /*if data_size <= fsize*/
-  // std::clog << SHIFT << std::endl  ;
-  // int i = 0;
-  // int pos = (SHIFT - 1) * data_size;
-  // //    pos = 0; // !!!
-  // while (i < data_size) {
-  //   if(i + pos >= fsize) {
-  //     SHIFT = 1;
-  //     pos = (SHIFT - 1) * data_size;
-  //   }
-  //   ret[i] = _data[i] ^ key[i + pos];
-  //   i++;
-  // }
-
-  for (int i = 0; i < data_size; i++) {
-    if(SHIFT == fsize - 1) {
-      SHIFT = 0;
+std::vector<uint8_t> Master::make_data(std::vector<uint8_t> cmd, uint8_t T) {
+  std::vector<uint8_t> data;
+  cmd_len = cmd.length();
+  // если есть команда управления
+  if (cmd_len != 0) {
+    data.push_back(cmd_len);
+    for(int i = 0; i < cmd_len; i++) {
+      data.push_back(cmd_len[i])
     }
-    ret[i] = _data[i] ^ key[i + SHIFT];
-
-    std::clog << (int) ret[i] << " xor ";
-    std::clog << (int) key[i + SHIFT] << " = ";
-    std::clog << (int) _data[i] << std::endl;
-
-   SHIFT++;
+  } else {
+    data.push_back(0);  // L == 0; команды управления нет
   }
-
-  return ret;
+  //
+  if (T != 0) {
+    data.push_back()
+  }
+  return data;
 }
 
-/*
-  Function for convert float to string
-*/
-std::string fts(float number) {
-    std::ostringstream buff;
-    buff << number;
-    return buff.str();
+std::vector<uint8_t> Master::encrypt(std::vector<uint> data) {
+  std::vector<uint> encrypt_data;
+  for (int i = 0; i < data.length(); i++) {
+    encrypt_data[i] = data[i] ^ key[i + pos_a];
+  }
+  return encrypt_data;
 }
 
-void joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
+std::vector<uint8_t> Master::decrypt(std::vector<uint> encrypt_video) {
+  std::vector<uint> data;
+  for (int i = 0; i < encrypt_video.length(); i++) {
+    data[i] = encrypt_video[i] ^ key[i + pos_a];
+  }
+  return data;
+}
+
+void Master::send(std::vector<uint8_t> data) {
+  std::vector<uint8_t> encrypt_data = encrypt(data);
+  pub_open_chanel_data.publish(encrypt_data);
+}
+
+void Master::reciveCallback(const kvant::CryptString::ConstPtr& msg) {
+  Image image = decrypt(msg);
+  pub_video.publish(image);
+}
+
+void Master::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
   std::clog << "Joy event!\n";
-  if(pub.getNumSubscribers() > 0) {
+  if(pub_open_chanel_data.getNumSubscribers() > 0) {
     // geting values of axes pads
     float left_x = joy_msg->axes[0];  // left-right move
     float left_y = joy_msg->axes[1];  // forward--backward move
     float right_x = joy_msg->axes[2]; // rotation move
-    float right_y = joy_msg->axes[3]; // dont useing
+    // float right_y = joy_msg->axes[3]; // dont use
 
-    // creating string with commands from gamepad
-    // as "-0.23 0.01 -0.00"
-    int size_data = 25;
-    char data[size_data];
-    for(int j = 0; j < size_data; j++) {
-      data[j] = '0';
-    }
-    sprintf(data, "%.2f %.2f %.2f", left_x, left_y, right_x);
-    unsigned char *udata = reinterpret_cast<unsigned char*>(data);
-
-    std::clog << "raw data: " << udata << std::endl;
-
-    // make message for ros
-    kvant::CryptString crmsg;
-
-    // encrypt
-    std::clog << SHIFT << std::endl;
-    std::vector<unsigned char> encrypt_data;
-    encrypt_data = XOR(udata, KEY_FILE_NAME);
-
-    std::clog << SHIFT << std::endl;
-
-    // just test for -- decrypt
-    // std::vector<unsigned char> decrypted_data;
-    // decrypted_data = XOR(&encrypt_data[0], KEY_FILE_NAME);
-
-    std::cout << "encr. data: "<< &encrypt_data[0] << std::endl;
-    // std::cout << "decr. data: "<< &decrypted_data[0] << std::endl;
-
-    // may be not need :)
-    for(int i = 0; i < encrypt_data.size(); i++) {
-      crmsg.crypt_string.push_back((uint8_t) encrypt_data[i]);
+    // включение/отключение видео
+    bool switch_camera = joy_msg->buttons[0]; // switch camera
+    if (switch_camera == true) {
+      switch_camera = !switch_camera;
     }
 
-    // for(int i = 0; i < 25; i++) {
-    //   ROS_INFO("%d %.2X", (int) data[i], encrypt_data[i]);
-    // }
+    std::vector<uint8_t> cmd;
+    cmd.push_back(left_x);
+    cmd.push_back(left_y);
+    cmd.push_back(right_x);
 
-    std::cout << "COUNT = " << COUNT << std::endl;
-    COUNT++;
-    pub.publish(crmsg);
-
-    /* !!! if data_size <= fsize*/
-    // SHIFT++;
-
-    std::clog << "Encrypted msg sent!\n";
-  } else {
-    SHIFT = 0;
-  }
+    std::vector<uint8_t> data;
+    if (switch_camera == true) {
+      data = make_data(cmd, T);
+    } else {
+      data = make_data(cmd, 0);
+    }
+    send(data);
 }
 
-int main(int argc, char **argv)
-{
+void Master::spin() {
   ros::init(argc, argv, "master");
-  ros::NodeHandle n;
-  sub = n.subscribe("joy", 10, joyCallback);
-  pub = n.advertise<kvant::CryptString>("open_channel", 10);
+  sub_joy = nh_.subscribe("joy", 10, joyCallback);
+  pub_open_chanel_data = nh_.advertise<kvant::CryptString>("open_chanel_data", 10);
+  sub_open_chanel_video = nh_.subscribe("open_chanel_video", 10, reciveCallback);
+  pub_video = nh_.advertise<sensor_msgs::Image>("camera", 10);
   // ros::Duration(1).sleep();
 
   ros::Rate R(20);
@@ -158,6 +104,4 @@ int main(int argc, char **argv)
     R.sleep();
   }
 
-  // ros::spin();
-  return 0;
 }
