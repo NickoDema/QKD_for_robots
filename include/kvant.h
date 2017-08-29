@@ -21,6 +21,7 @@
 #include <geometry_msgs/Twist.h>
 #include "sensor_msgs/Joy.h"
 #include <kvant/CryptString.h>
+#include <kvant/Set_key.h>
 
 
 class Basic
@@ -30,7 +31,7 @@ class Basic
         virtual ~Basic() {}
 
     protected:
-        virtual void getkey(std::string) = 0;
+        //virtual void getkey(std::string) = 0;
         //virtual void send(void) = 0;
         //virtual std::vector<uint8_t> recive(void) = 0;
 
@@ -57,7 +58,8 @@ class Slave: public Basic
 
         void encrypt_cb(const kvant::CryptStringConstPtr&);
         //std::string unencrypt(std::string);
-        bool getkey(std::string);
+        ros::ServiceServer getkey_srv;
+        bool key_extend(kvant::Set_key::Request&, kvant::Set_key::Response&);
 
         //std::vector<uint8_t> key;
 };

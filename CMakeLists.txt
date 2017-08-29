@@ -17,6 +17,11 @@ add_message_files(
  CryptString.msg
 )
 
+add_service_files(
+FILES
+Set_key.srv
+)
+
 generate_messages(
  DEPENDENCIES
  std_msgs

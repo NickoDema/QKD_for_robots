@@ -18,9 +18,11 @@ Slave::Slave(std::string path): nh_("~")
     }
     encrypt_sub = nh_.subscribe("/open_channel", 10, &Slave::encrypt_cb, this);
     cmd_vel_pub = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
+
+    getkey_srv = nh_.advertiseService("set_key", &Slave::key_extend, this);
 }
 
-bool Slave::getkey(std::string path)
+bool Slave::getkey(kvant::Set_key::Request& req, kvant::Set_key::Response& res)
 {
     std::ifstream keyF(path, std::ios::binary | std::ios::ate);
     size_t keyF_size = keyF.tellg();
