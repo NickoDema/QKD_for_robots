@@ -50,24 +50,14 @@ include_directories(
 #  src/kvant_basic.cpp
 #)
 
-add_executable( master
-  src/kvant_master_node.cpp
-  src/kvant_master.cpp
-  src/kvant_basic.cpp
-)
-
-add_executable( jtest
-  src/test_joy.cpp
-)
-target_link_libraries(jtest
+target_link_libraries(slave
   ${catkin_LIBRARIES}
 )
 
-
-
-#target_link_libraries(slave
-#  ${catkin_LIBRARIES}
-#)
+ add_executable( master
+  src/kvant_master_node.cpp
+  src/kvant_master.cpp
+)
 
 target_link_libraries(master
   ${catkin_LIBRARIES}

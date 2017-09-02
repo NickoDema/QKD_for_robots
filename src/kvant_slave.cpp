@@ -2,6 +2,7 @@
  *  kvant_slave.cpp
  *
  *  Created on: 10.08.2017
+ *          By: Nikoaly Dema
  *       Email: Nicko_Dema@protonmail.com
  *              ITMO University
  *              Robotics Engineering Department
@@ -9,88 +10,92 @@
 
 #include "kvant.h"
 
-Slave::Slave(std::string path): nh_("~")
+Slave::Slave(std::string path): nh_("~"), Basic()
 {
-    if (!getkey(path))
-    {
-        ROS_INFO("Can't open %s", path.c_str());
-        exit(-1);
-    }
-    encrypt_sub = nh_.subscribe("/open_channel", 10, &Slave::encrypt_cb, this);
+    video_sub = nh_.subscribe("/robotino/camera", 4, &Slave::robotino_video_cb, this);
+    data_sub = nh_.subscribe("/open_channel_data", 4, &Slave::encrypt_data_cb, this);
+
     cmd_vel_pub = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
+    video_pub = nh_.advertise<geometry_msgs::Twist>("/open_chanel_video", 25, true);
 
     getkey_srv = nh_.advertiseService("set_key", &Slave::key_extend, this);
 }
 
-bool Slave::getkey(kvant::Set_key::Request& req, kvant::Set_key::Response& res)
+/* Action сервер, при получении запроса, дополняет имеющийся ключ с конца
+ * значениями соответствующего поля запроса.
+ */
+bool Slave::key_extend(kvant::Set_key::Request& req, kvant::Set_key::Response& res)
 {
-    std::ifstream keyF(path, std::ios::binary | std::ios::ate);
-    size_t keyF_size = keyF.tellg();
-    keyF.seekg(0, std::ios::beg);
-    key.resize(keyF_size);
-    keyF.read( (char*)&key[0], keyF_size);
-    pos_counter = 0;
-
-    for (size_t i = 0; i < keyF_size; ++i)
+    size_t j = key.size();
+    for (size_t i = 0; i < req.key.size(); i++)
     {
-        std::string str;
-        str = std::to_string(key[i]);
-        ROS_INFO("crmsg %s %.2X", str.c_str(), key[i]);
+        key.push_back(req.key[i]);
+        std::cout << "Key is extended by: " << std::hex << key[j+i];
+        //ROS_INFO(" %.2X", key[j+i]);
     }
-
+    res.set = true;
     return true;
 }
 
-void Slave::encrypt_cb(const kvant::CryptStringConstPtr& msg)
+/* Прием шифротекста, дешифровка, парсинг и отправка управляющей команды для
+ * Robotino, сохранение в очередь части ключа, доступной для использования
+ * при отправки видео
+ * Формат принимаемого сообщения следующий: |L|DATA|T|
+ * L - длинна поля DATA в байтах
+ * DATA - передаваемые данные, в данном случае - значения скоростей по трем
+ *        компонентам x,y,z
+ * T - кол-во байт ключа, доступных для отправки видео. Абсолютные положения
+ *     доступных байт в ключе сохраняются в очередь для последующей отправки
+ *     видео
+ */
+void Slave::encrypt_data_cb(const kvant::CryptStringConstPtr& msg)
 {
-    static int count = 0;
-    //ROS_INFO("id %d", msg->id);
-
-    float vels[3];
-    std::vector<unsigned char> data_v;
+    std::vector<uint8_t> data;
     geometry_msgs::Twist cmd_msg;
 
-    size_t msg_size = msg->crypt_string.size();
-    ROS_INFO(" %zu -----", msg_size);
-
-    for (size_t i = 0; i < msg_size; ++i)
+    size_t data_size = msg->crypt_string.size();
+    if ((key.size() - pos_a) < data_size)
     {
-        ROS_INFO(" %.2X", msg->crypt_string[i]);
+        ROS_ERROR("[Slave]: Key size is less then recived data!");
+        break;
     }
-    ROS_INFO(" count = %d  before", pos_counter);
-    for (size_t i = 0; i < msg_size; i++)
+
+    // Дешифровка принимаемых данных
+    for (size_t i = 0; i < data_size; i++) {
+        data.push_back(msg->crypt_string[i]^key[pos_a+i]);
+    }
+
+    // Изменение текущей абсолютной позиции в ключе
+    pos_a += (unsigned int)data_size;
+
+    // Проверка наличия поля T
+    if (data_size != (size_t)(data[0]+1))
     {
-        //ROS_INFO("i = %zu | count = %d", i, pos_counter);
-        if (pos_counter == ((int)key.size()- 1)) {
-            pos_counter = 0;
-        }
-        data_v.push_back((unsigned char)(msg->crypt_string[i]^key[i+pos_counter]));
-        ROS_INFO(" %d xor %d = %d", (int)msg->crypt_string[i], (int)key[i+pos_counter],
-                                    (int)data_v[i]);
-        pos_counter++;
+        // Если данные содержат поле T, то в очередь добавляются абсолютные
+        // позиции байтов в ключе, доступные для передачи видео
+        cam_key.push(std::make_pair(pos_a,pos_a+data[data_size-1]);
+        pos_a += (unsigned int)data[data_size];
     }
-    ROS_INFO(" count = %d  after", pos_counter);
 
-    ROS_INFO("-------------------");
-    for (size_t i = 0; i < data_v.size(); ++i)
+    // Если поле DATA не пустое, формируем и публикуем управляющее задание
+    if (data[0] != 0)
     {
-        std::string str;
-        str = std::to_string(data_v[i]);
-        ROS_INFO(" %d %.2X", (int)data_v[i], data_v[i]);
+        cmd_msg.linear.x = (float)data[1];// * scale_linear_;
+        cmd_msg.linear.y = (float)data[2];// * scale_linear_;
+        cmd_msg.angular.z = (float)data[3];// * scale_angular_;
+        cmd_vel_pub.publish(cmd_msg);
     }
+    // ROS_INFO(" %zu -----", data_size);
+    // ROS_INFO(" %.2X", msg->crypt_string[i]);
+    // std::stringstream ss(data);
+    //     ss >> vels[i];
+}
 
-    std::string data(data_v.begin(), data_v.end());
-    ROS_INFO(" %s ", data.c_str());
-    std::stringstream ss(data);
-    for (int i=0; i<3; i++) {
-        ss >> vels[i];
-    }
-    ROS_INFO("-------------------");
-    cmd_msg.linear.x = vels[1];// * scale_linear_;
-    cmd_msg.linear.y = vels[0];// * scale_linear_;
-    cmd_msg.angular.z = vels[2];// * scale_angular_;
+void robotino_video_cb(const sensor_msgs::ImageConstPtr& msg)
+{
+    //
+    kvant::CryptString video_msg;
 
-    cmd_vel_pub.publish(cmd_msg);
 }
 
 void Slave::spin()
