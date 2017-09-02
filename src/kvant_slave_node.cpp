@@ -2,6 +2,7 @@
  *  kvant_slave_node.cpp
  *
  *  Created on: 10.08.2017
+ *          By: Nikoaly Dema
  *       Email: Nicko_Dema@protonmail.com
  *              ITMO University
  *              Robotics Engineering Department

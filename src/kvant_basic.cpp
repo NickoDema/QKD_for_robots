@@ -2,6 +2,7 @@
  *  kvant_basic.cpp
  *
  *  Created on: 10.08.2017
+ *          By: Nikoaly Dema
  *       Email: Nicko_Dema@protonmail.com
  *              ITMO University
  *              Robotics Engineering Department
@@ -9,6 +10,10 @@
 
 #include "kvant.h"
 //
+Basic::Basic(): pos_a(0),
+                pos_r(0), T(16)
+{}
+
 // void Basic::getkey() {}
 // {
 //     std::ifstream keyF(path, std::ios::binary | std::ios::ate);
