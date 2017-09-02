@@ -16,29 +16,27 @@
 #include <sstream>
 #include <cstdlib>
 #include <vector>
+#include <dirent.h>
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include "sensor_msgs/Joy.h"
 #include <kvant/CryptString.h>
 #include <kvant/Set_key.h>
-#include <sensor_msgs/Image>
+#include <sensor_msgs/Image.h>
 
 class Basic
 {
     public:
-        virtual ~Basic() {
-          this.T = 16;    // поумолчаию выделается 16 байт ключа на кадр видео
-          this.pos_a = 0;
-          this.pos_r = 0;
-        }
+        Basic();
+        virtual ~Basic() {}
 
     protected:
         //virtual void getkey(std::string) = 0;
         //virtual void send(void) = 0;
         //virtual std::vector<uint8_t> recive(void) = 0;
 
-        int T;   // длина ключа выделаненная под ответ от slave
+        uint8_t T;   // длина ключа выделаненная под ответ от slave
         unsigned int pos_a;             //absolute position in the key
         unsigned int pos_r;             //relative position in the key
         int pos_counter;
@@ -67,26 +65,34 @@ class Slave: public Basic
         //std::vector<uint8_t> key;
 };
 
-class Master: public Basic
-{
+class Master: public Basic {
     public:
-        Master(std::string) : camera_enable(false) {};
-        //~Master();
-
+        Master();
+        Master(std::string);
         void spin();
 
     protected:
         ros::NodeHandle nh_;
-        ros::Publisher pub_open_chanel_data;
         ros::Subscriber sub_joy;
-        bool camera_enable;
+        ros::Publisher pub_open_chanel_data;
+        ros::Subscriber sub_open_chanel_video;
+        ros::Publisher pub_video;
 
-        std::vector<uint8_t> make_data(std::vector<uint8_t> cmd, uint8_t T);
-        std::vector<uint8_t> encrypt(std::vector<uint> data);
-        std::vector<uint8_t> decrypt(std::vector<uint> encrypt_video) {
+        ros::ServiceClient set_key_client;
+
+        bool camera_enable;
+        struct dirent *ent;
+
+        std::vector<char*> getAvalibleKeyNames();
+        std::vector<uint8_t> readKey(char *key_name);
+        bool expandKey();
+
+        std::vector<uint8_t> make_data(std::vector<uint8_t> cmd, bool camera_enable);
+        std::vector<uint8_t> encrypt(std::vector<uint8_t> data);
+        std::vector<uint8_t> decrypt(std::vector<uint8_t> encrypt_video);
         void send(std::vector<uint8_t> data);
         void reciveCallback(const kvant::CryptString::ConstPtr& msg);
-        void joyCallback(const sensor_msgs::Joy::ConstPtr& msg_joy)
+        void joyCallback(const sensor_msgs::Joy::ConstPtr& msg_joy);
 
         // void encrypt_cb(const kvant::CryptStringConstPtr&);
         //std::string unencrypt(std::string);

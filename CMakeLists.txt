@@ -44,20 +44,30 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable( slave
-  src/kvant_slave_node.cpp
-  src/kvant_slave.cpp
-  src/kvant_basic.cpp
-)
+#add_executable( slave
+#  src/kvant_slave_node.cpp
+#  src/kvant_slave.cpp
+#  src/kvant_basic.cpp
+#)
 
 add_executable( master
   src/kvant_master_node.cpp
   src/kvant_master.cpp
+  src/kvant_basic.cpp
 )
 
-target_link_libraries(slave
+add_executable( jtest
+  src/test_joy.cpp
+)
+target_link_libraries(jtest
   ${catkin_LIBRARIES}
 )
+
+
+
+#target_link_libraries(slave
+#  ${catkin_LIBRARIES}
+#)
 
 target_link_libraries(master
   ${catkin_LIBRARIES}

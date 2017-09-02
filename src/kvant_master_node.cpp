@@ -8,12 +8,9 @@
  */
 #include "kvant.h"
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     ros::init(argc, argv, "master");
-    Master ojct_name("/home/kirix/rosws/src"
-                              "/kvant/keys/00024b1f_Alice.key");
-
+    Master ojct_name("/home/kirix/rosws/src/kvant/keys/00024b1f_Alice.key");
     ojct_name.spin();
     return 0;
 }
