@@ -17,6 +17,7 @@
 #include <vector>
 #include <dirent.h>
 #include <queue>
+#include <string>
 
 #include <crypto++/aes.h>
 #include <crypto++/modes.h>
@@ -42,7 +43,7 @@ class Basic
         int pos_counter;
 
         std::vector<uint8_t> key;
-        std::queue<std::pair<unsigned int, unsigned int>> cam_key;
+        std::queue<std::pair<unsigned int, unsigned int> > cam_key;
 };
 
 class Slave: public Basic
@@ -62,7 +63,7 @@ class Slave: public Basic
         ros::ServiceServer getkey_srv;
         bool key_extend(kvant::Set_key::Request&, kvant::Set_key::Response&);
         void encrypt_data_cb(const kvant::CryptStringConstPtr&);
-        void robotino_video_cb(const sensor_msgs/ImageConstPtr&);
+        void robotino_video_cb(const sensor_msgs::ImageConstPtr&);
 
         // bool key_extend(kvant::Set_key::Request&, kvant::Set_key::Response&);
 

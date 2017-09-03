@@ -10,9 +10,6 @@
 
 #include "kvant.h"
 
-Basic::Basic() : T(16), pos_a(0), pos_r(0) {}
-
-//
 Basic::Basic(): pos_a(0),
                 pos_r(0), T(16)
 {}
