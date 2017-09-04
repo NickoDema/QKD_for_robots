@@ -18,8 +18,9 @@ add_message_files(
 )
 
 add_service_files(
-FILES
-Set_key.srv
+  FILES
+  Set_key.srv
+  Aes.srv
 )
 
 generate_messages(
@@ -50,9 +51,9 @@ add_executable( slave
   src/kvant_basic.cpp
 )
 
-add_executable( test2
-  src/test2.cpp
-)
+#add_executable( test2
+#  src/test2.cpp
+#)
 
 target_link_libraries(slave
   ${catkin_LIBRARIES}
