@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(kvant)
 
-## c++17 standart
-add_compile_options(-std=gnu++1z -lcryptopp)
+## c++17 standart -std=gnu++1z
+add_compile_options(-lcryptopp)
 
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
@@ -44,15 +44,19 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-#add_executable( slave
-#  src/kvant_slave_node.cpp
-#  src/kvant_slave.cpp
-#  src/kvant_basic.cpp
-#)
+add_executable( slave
+  src/kvant_slave_node.cpp
+  src/kvant_slave.cpp
+  src/kvant_basic.cpp
+)
 
-#target_link_libraries(slave
-#  ${catkin_LIBRARIES}
-#)
+add_executable( test2
+  src/test2.cpp
+)
+
+target_link_libraries(slave
+  ${catkin_LIBRARIES}
+)
 
  add_executable( master
   src/kvant_master_node.cpp

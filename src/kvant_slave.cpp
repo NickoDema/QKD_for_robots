@@ -9,6 +9,8 @@
  */
 
 #include "kvant.h"
+using namespace CryptoPP;
+using namespace std;
 
 Slave::Slave(std::string path): nh_("~"), Basic()
 {
@@ -57,7 +59,7 @@ void Slave::encrypt_data_cb(const kvant::CryptStringConstPtr& msg)
     if ((key.size() - pos_a) < data_size)
     {
         ROS_ERROR("[Slave]: Key size is less then recived data!");
-        break;
+        return;
     }
 
     // Дешифровка принимаемых данных
@@ -73,8 +75,15 @@ void Slave::encrypt_data_cb(const kvant::CryptStringConstPtr& msg)
     {
         // Если данные содержат поле T, то в очередь добавляются абсолютные
         // позиции байтов в ключе, доступные для передачи видео
-        cam_key.push(std::make_pair(pos_a,pos_a+data[data_size-1]);
-        pos_a += (unsigned int)data[data_size];
+        if ((pos_a+data[data_size-1] - pos_a + 1) != VIDEO_KEY_L) {
+            ROS_ERROR("[Slave]: T field in the DATA is not equal to the "
+                      "standard AES value!");
+        }
+        else
+        {
+            cam_key.push(std::make_pair(pos_a,pos_a+data[data_size-1]));
+            pos_a += (unsigned int)data[data_size];
+        }
     }
 
     // Если поле DATA не пустое, формируем и публикуем управляющее задание
@@ -91,10 +100,86 @@ void Slave::encrypt_data_cb(const kvant::CryptStringConstPtr& msg)
     //     ss >> vels[i];
 }
 
-void robotino_video_cb(const sensor_msgs::ImageConstPtr& msg)
+void Slave::robotino_video_cb(const sensor_msgs::ImageConstPtr& msg)
 {
     //
     kvant::CryptString video_msg;
+    if (!cam_key.empty())
+    {
+
+
+
+
+
+        // std::pair<unsigned int, unsigned int> key_frame = cam_key.front();
+        // cam_key.pop();
+        //
+        // byte key_aes[CryptoPP::AES::DEFAULT_KEYLENGTH];
+        // byte iv_aes[CryptoPP::AES::BLOCKSIZE];
+        //
+        // std::vector<byte> plain, cipher;
+        // HexEncoder encoder(new FileSink(std::cout));
+        //
+        // // memcpy(key_aes, &key[key_frame.first], VIDEO_KEY_L);
+        // // memcpy(iv_aes,  &key[key_frame.first], VIDEO_KEY_L);
+        // memset(key_aes, 0x00, sizeof(key_aes));
+        // memset(iv_aes, 0x00, sizeof(iv_aes));
+        //
+        // std::string str("Attack at dawn!");
+        // std::copy(str.begin(), str.end(), std::back_inserter(plain));
+        // //std::copy(msg->data.begin(), msg->data.end(), std::back_inserter(plain));
+        //
+        // // std::cout << "[Slave] Plain text: ";
+        // // encoder.Put(plain.data(), plain.size());
+        // // encoder.MessageEnd();
+        // // std::cout << std::endl;
+        //
+        // CBC_Mode<AES>::Encryption enc;
+        // enc.SetKeyWithIV(key_aes, sizeof(key_aes), iv_aes, sizeof(iv_aes));
+        //
+        // // Make room for padding
+        // cipher.resize(plain.size()+AES::BLOCKSIZE);
+        // ArraySink cs(&cipher[0], cipher.size());
+        //
+        // ArraySource(plain.data(), plain.size(), true,
+        //     new StreamTransformationFilter(enc, new Redirector(cs)));
+        //
+        // // Set cipher text length now that its known
+        // cipher.resize(cs.TotalPutLength());
+
+         std::cout << "Cipher text: ";
+        // encoder.Put(cipher.data(), cipher.size());
+        // encoder.MessageEnd();
+         std::cout << std::endl;
+
+        // CryptoPP::AES::Encryption en_aes(key_aes, CryptoPP::AES::DEFAULT_KEYLENGTH);
+        // CryptoPP::CBC_Mode_ExternalCipher::Encryption en_cbc(en_aes, iv_aes);
+        //
+        // //unsigned char frame[HEIGHT*WIDTH*3];
+        // //unsigned char chipt[HEIGHT*WIDTH*3];
+        // std::vector<unsigned char> chipt;
+        // chipt.resize(msg->data.size());
+        // //for (size_t j = 0; j < msg->data.size(); j++) {
+        // //    frame[j] = (unsigned char)msg->data[j];
+        // //}
+        //
+        // CryptoPP::StreamTransformationFilter en_stf(en_cbc,
+        //                     new CryptoPP::ArraySink(&chipt[0], chipt.size()));
+        // en_stf.Put(reinterpret_cast<const unsigned char*>(&msg->data[0]),
+        //            msg->data.size());
+        // en_stf.MessageEnd();
+
+        // for (size_t i = 0; i < cipher.size(); i++) {
+        //     video_msg.crypt_string.push_back(cipher[i]);
+        // }
+        // video_pub.publish(video_msg);
+    }
+    else
+    {
+        ROS_ERROR("[Slave]: There are no key sequences permitting to transfer "
+                  "video frames!");
+        return;
+    }
 
 }
 

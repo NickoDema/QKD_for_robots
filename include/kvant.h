@@ -10,6 +10,11 @@
 #ifndef KVANT_
 #define KVANT_
 
+#define HEIGHT 480              // Высота изображения в пикселях
+#define WIDTH 640               // Ширина изображения в пикселях
+#define VIDEO_KEY_L 16          // Длинна ключа для одного фрейма в байтах
+//#define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -19,9 +24,12 @@
 #include <queue>
 #include <string>
 
+#include "crypto++/cryptlib.h"
 #include <crypto++/aes.h>
 #include <crypto++/modes.h>
 #include <crypto++/filters.h>
+#include "crypto++/hex.h"
+#include "crypto++/files.h"
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
