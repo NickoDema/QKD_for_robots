@@ -12,7 +12,7 @@
 using namespace CryptoPP;
 using namespace std;
 
-Slave::Slave(std::string path): nh_("~"), Basic()
+Slave::Slave(std::string path): Basic()
 {
     video_sub = nh_.subscribe("/robotino/camera", 4, &Slave::robotino_video_cb, this);
     data_sub = nh_.subscribe("/open_channel_data", 4, &Slave::encrypt_data_cb, this);
@@ -106,8 +106,31 @@ void Slave::robotino_video_cb(const sensor_msgs::ImageConstPtr& msg)
     kvant::CryptString video_msg;
     if (!cam_key.empty())
     {
+      /*
+      // ПРВИЕТ, КОЛЯ :)
+      // как-то вроде вот так можно поюзать сервис
 
+      std::vector<uint8_t> encrypted_video;
 
+      std::pair<unsigned int, unsigned int> key_frame = cam_key.front();
+      cam_key.pop();
+      kvant::Aes aes_srv;
+
+      // 1. select mode of aes encr/decr
+      aes_srv.request.mode = 0; // decryption
+
+      // 2. add to service request KEY
+      for (int i = key_frame.first; i < key_frame.second; i++) {
+        aes_srv.request.key.push_back(key[i]);
+      }
+
+      // 3. add to service request DATA
+      aes_srv.request.req_data = video;
+
+      aes_client.call(aes_srv);
+      encrypted_video = aes_srv.response.resp_data;
+
+      */
 
 
 
