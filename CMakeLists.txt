@@ -33,7 +33,8 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES kvant
-#  CATKIN_DEPENDS geometry_msgs message_generation roscpp sensor_msgs std_msgs
+  CATKIN_DEPENDS message_runtime
+#    geometry_msgs message_generation roscpp sensor_msgs std_msgs
   DEPENDS libcrypto++9
 )
 
@@ -57,6 +58,8 @@ target_link_libraries(slave
   ${catkin_LIBRARIES}  /usr/lib/libcrypto++.a
 )
 
+add_dependencies(slave kvant_generate_messages_cpp)
+
 add_executable( master
   src/kvant_master_node.cpp
   src/kvant_master.cpp
@@ -66,3 +69,5 @@ add_executable( master
 target_link_libraries(master
   ${catkin_LIBRARIES} /usr/lib/libcrypto++.a
 )
+
+add_dependencies(master kvant_generate_messages_cpp)

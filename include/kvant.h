@@ -35,7 +35,7 @@ using namespace CryptoPP;
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-#include "sensor_msgs/Joy.h"
+#include <sensor_msgs/Joy.h>
 #include <kvant/CryptString.h>
 #include <kvant/Set_key.h>
 #include <sensor_msgs/Image.h>

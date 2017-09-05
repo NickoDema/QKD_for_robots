@@ -10,12 +10,12 @@
 #include "kvant.h"
 
 Master::Master(std::string path) : Basic(), camera_enable(false) {
-  sub_joy = nh_.subscribe("joy", 10, &Master::joyCallback, this);
-  sub_open_chanel_video = nh_.subscribe("open_chanel_video", 10, &Master::reciveCallback, this);
-  pub_open_chanel_data = nh_.advertise<kvant::CryptString>("open_chanel_data", 10);
-  pub_video = nh_.advertise<sensor_msgs::Image>("camera", 10);
+  sub_joy = nh_.subscribe("/joy", 10, &Master::joyCallback, this);
+  sub_open_chanel_video = nh_.subscribe("/open_chanel_video", 10, &Master::reciveCallback, this);
+  pub_open_chanel_data = nh_.advertise<kvant::CryptString>("/open_chanel_data", 10);
+  pub_video = nh_.advertise<sensor_msgs::Image>("/camera", 10);
 
-  set_key_client = nh_.serviceClient<kvant::Set_key>("set_key");
+  set_key_client = nh_.serviceClient<kvant::Set_key>("/slave/set_key");
   ros::Duration(1).sleep();
   // expandKey();
   ROS_INFO("Master init!");
@@ -30,6 +30,9 @@ void Master::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
     float right_x = joy_msg->axes[2]; // rotation move
     // float right_y = joy_msg->axes[3]; // dont use
 
+    clog << "cmd before: " << left_x<< " " << left_y << " "
+         << right_x << endl;
+
     // команда остановки
     bool stop_robot = joy_msg->buttons[3];
 
@@ -43,7 +46,7 @@ void Master::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
       } else {
         ROS_INFO("Camera turn off!");
       }
-    }
+  }
 
     // формируем команду управления только в том случае,
     // когда нажаты соответстующие кнопки
@@ -123,7 +126,13 @@ std::vector<uint8_t> Master::encrypt(std::vector<uint8_t> data) {
     //           << static_cast<int>(key[i + pos_a]) << " = "
     //           << static_cast<int>(data[i] ^ key[i + pos_a]) << std::endl;
   }
-  pos_a += data.size() + T;
+  if (camera_enable == true) {
+    pos_a += data.size() + T;
+  } else {
+    pos_a += data.size();
+  }
+  std::clog << "\nPosition on the key (abs.): "<< pos_a
+            << "\n";
   return encrypt_data;
 }
 
@@ -184,6 +193,7 @@ std::vector<uint8_t> Master::make_data(std::vector<uint8_t> cmd,
       data.push_back(0);  // L == 0; т.е. команды управления нет (TODO: ИЗБАВИТЬСЯ)
     }
     data.push_back(T);
+    clog << "put in Q: " << pos_a << " | " << pos_a + T << endl;
     cam_key.push(std::make_pair(pos_a, pos_a + T));
   }
   return data;
@@ -313,7 +323,7 @@ void Master::reciveCallback(const kvant::CryptString::ConstPtr& msg) {
 }
 
 void Master::spin() {
-  ros::Rate R(20);
+  ros::Rate R(15);
   while(nh_.ok()) {
     ros::spinOnce();
     R.sleep();
