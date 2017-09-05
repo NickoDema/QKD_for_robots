@@ -9,8 +9,6 @@
  */
 
 #include "kvant.h"
-using namespace CryptoPP;
-using namespace std;
 
 Slave::Slave(std::string path): nh_("~"), Basic()
 {
@@ -107,45 +105,41 @@ void Slave::robotino_video_cb(const sensor_msgs::ImageConstPtr& msg)
     if (!cam_key.empty())
     {
 
+        std::pair<unsigned int, unsigned int> key_frame = cam_key.front();
+        cam_key.pop();
 
+        byte key_aes[CryptoPP::AES::DEFAULT_KEYLENGTH];
+        byte iv_aes[CryptoPP::AES::BLOCKSIZE];
 
+        std::vector<byte> plain, cipher;
+        HexEncoder encoder(new FileSink(std::cout));
 
+        memcpy(key_aes, &key[key_frame.first], VIDEO_KEY_L);
+        memcpy(iv_aes,  &key[key_frame.first], VIDEO_KEY_L);
+        //memset(key_aes, 0x00, sizeof(key_aes));
+        //memset(iv_aes, 0x00, sizeof(iv_aes));
 
-        // std::pair<unsigned int, unsigned int> key_frame = cam_key.front();
-        // cam_key.pop();
-        //
-        // byte key_aes[CryptoPP::AES::DEFAULT_KEYLENGTH];
-        // byte iv_aes[CryptoPP::AES::BLOCKSIZE];
-        //
-        // std::vector<byte> plain, cipher;
-        // HexEncoder encoder(new FileSink(std::cout));
-        //
-        // // memcpy(key_aes, &key[key_frame.first], VIDEO_KEY_L);
-        // // memcpy(iv_aes,  &key[key_frame.first], VIDEO_KEY_L);
-        // memset(key_aes, 0x00, sizeof(key_aes));
-        // memset(iv_aes, 0x00, sizeof(iv_aes));
-        //
         // std::string str("Attack at dawn!");
         // std::copy(str.begin(), str.end(), std::back_inserter(plain));
-        // //std::copy(msg->data.begin(), msg->data.end(), std::back_inserter(plain));
-        //
-        // // std::cout << "[Slave] Plain text: ";
-        // // encoder.Put(plain.data(), plain.size());
-        // // encoder.MessageEnd();
-        // // std::cout << std::endl;
-        //
-        // CBC_Mode<AES>::Encryption enc;
-        // enc.SetKeyWithIV(key_aes, sizeof(key_aes), iv_aes, sizeof(iv_aes));
-        //
-        // // Make room for padding
-        // cipher.resize(plain.size()+AES::BLOCKSIZE);
-        // ArraySink cs(&cipher[0], cipher.size());
-        //
-        // ArraySource(plain.data(), plain.size(), true,
-        //     new StreamTransformationFilter(enc, new Redirector(cs)));
-        //
-        // // Set cipher text length now that its known
-        // cipher.resize(cs.TotalPutLength());
+        std::copy(msg->data.begin(), msg->data.end(), std::back_inserter(plain));
+
+        // std::cout << "[Slave] Plain text: ";
+        // encoder.Put(plain.data(), plain.size());
+        // encoder.MessageEnd();
+        // std::cout << std::endl;
+
+        CBC_Mode<AES>::Encryption enc;
+        enc.SetKeyWithIV(key_aes, sizeof(key_aes), iv_aes, sizeof(iv_aes));
+
+        // Make room for padding
+        cipher.resize(plain.size()+AES::BLOCKSIZE);
+        ArraySink cs(&cipher[0], cipher.size());
+
+        ArraySource(plain.data(), plain.size(), true,
+            new StreamTransformationFilter(enc, new Redirector(cs)));
+
+        // Set cipher text length now that its known
+        cipher.resize(cs.TotalPutLength());
 
          std::cout << "Cipher text: ";
         // encoder.Put(cipher.data(), cipher.size());
@@ -169,10 +163,10 @@ void Slave::robotino_video_cb(const sensor_msgs::ImageConstPtr& msg)
         //            msg->data.size());
         // en_stf.MessageEnd();
 
-        // for (size_t i = 0; i < cipher.size(); i++) {
-        //     video_msg.crypt_string.push_back(cipher[i]);
-        // }
-        // video_pub.publish(video_msg);
+        for (size_t i = 0; i < cipher.size(); i++) {
+            video_msg.crypt_string.push_back(cipher[i]);
+        }
+        video_pub.publish(video_msg);
     }
     else
     {

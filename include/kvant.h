@@ -23,6 +23,7 @@
 #include <dirent.h>
 #include <queue>
 #include <string>
+using namespace std;
 
 #include "crypto++/cryptlib.h"
 #include <crypto++/aes.h>
@@ -30,6 +31,7 @@
 #include <crypto++/filters.h>
 #include "crypto++/hex.h"
 #include "crypto++/files.h"
+using namespace CryptoPP;
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>

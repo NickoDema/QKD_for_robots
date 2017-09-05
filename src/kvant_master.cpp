@@ -247,16 +247,48 @@ std::vector<char*> Master::getAvalibleKeyNames() {
 
 std::vector<uint8_t> Master::decrypt(std::vector<uint8_t> encrypt_video) {
   std::vector<uint8_t> data;
-  for (int i = 0; i < encrypt_video.size(); i++) {
-    data[i] = encrypt_video[i] ^ key[i + pos_a];
-  }
+
+  std::pair<unsigned int, unsigned int> key_frame = cam_key.front();
+  cam_key.pop();
+
+  byte key_aes[CryptoPP::AES::DEFAULT_KEYLENGTH];
+  byte iv_aes[CryptoPP::AES::BLOCKSIZE];
+
+  std::vector<byte> recover, cipher;
+  HexEncoder encoder(new FileSink(std::cout));
+
+  memcpy(key_aes, &key[key_frame.first], VIDEO_KEY_L);
+  memcpy(iv_aes,  &key[key_frame.first], VIDEO_KEY_L);
+
+  std::copy(encrypt_video.begin(), encrypt_video.end(),
+            std::back_inserter(cipher));
+
+  CBC_Mode<AES>::Decryption dec;
+  dec.SetKeyWithIV(key_aes, sizeof(key_aes), iv_aes, sizeof(iv_aes));
+
+  recover.resize(cipher.size());
+  ArraySink rs(&recover[0], recover.size());
+
+  ArraySource(cipher.data(), cipher.size(), true,
+    new StreamTransformationFilter(dec, new Redirector(rs)));
+
+  recover.resize(rs.TotalPutLength());
+
+  std::copy(recover.begin(), recover.end(), std::back_inserter(data));
+
   return data;
 }
 
 void Master::reciveCallback(const kvant::CryptString::ConstPtr& msg) {
-  std::vector<uint8_t> en_data_msg = msg->crypt_string;
+  std::vector<uint8_t> en_data = msg->crypt_string;
   sensor_msgs::Image image;
-  image.data = Master::decrypt(en_data_msg);
+  image.header.stamp = ros::Time();
+  image.header.frame_id = "/open_channel_data";
+  image.height = HEIGHT;
+  image.width = WIDTH;
+  image.encoding = "rgb8";
+  image.step = WIDTH*3;
+  image.data = Master::decrypt(en_data);
   Master::pub_video.publish(image);
 }
 

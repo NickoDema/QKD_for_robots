@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(kvant)
 
+#set(CMAKE_CXX_FLAGS "-lcryptopp")
+
 ## c++17 standart -std=gnu++1z
-add_compile_options(-lcryptopp)
+add_compile_options(-std=c++11 -lcryptopp)
 
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
@@ -31,7 +33,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES kvant
 #  CATKIN_DEPENDS geometry_msgs message_generation roscpp sensor_msgs std_msgs
-#  DEPENDS system_lib
+  DEPENDS libcrypto++9
 )
 
 ###########
@@ -50,12 +52,16 @@ add_executable( slave
   src/kvant_basic.cpp
 )
 
+target_link_libraries(slave
+  ${catkin_LIBRARIES}  /usr/lib/libcrypto++.a
+)
+
 add_executable( test2
   src/test2.cpp
 )
 
-target_link_libraries(slave
-  ${catkin_LIBRARIES}
+target_link_libraries(test2
+  ${catkin_LIBRARIES} /usr/lib/libcrypto++.a
 )
 
  add_executable( master
@@ -65,5 +71,5 @@ target_link_libraries(slave
 )
 
 target_link_libraries(master
-  ${catkin_LIBRARIES}
+  ${catkin_LIBRARIES} /usr/lib/libcrypto++.a
 )
