@@ -20,8 +20,9 @@ add_message_files(
 )
 
 add_service_files(
-FILES
-Set_key.srv
+  FILES
+  Set_key.srv
+  Aes.srv
 )
 
 generate_messages(
@@ -56,15 +57,7 @@ target_link_libraries(slave
   ${catkin_LIBRARIES}  /usr/lib/libcrypto++.a
 )
 
-add_executable( test2
-  src/test2.cpp
-)
-
-target_link_libraries(test2
-  ${catkin_LIBRARIES} /usr/lib/libcrypto++.a
-)
-
- add_executable( master
+add_executable( master
   src/kvant_master_node.cpp
   src/kvant_master.cpp
   src/kvant_basic.cpp

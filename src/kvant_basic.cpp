@@ -11,8 +11,10 @@
 #include "kvant.h"
 
 Basic::Basic(): pos_a(0),
-                pos_r(0), T(16)
-{}
+                pos_r(0), T(16), nh_("~")
+{
+  aes_client = nh_.serviceClient<kvant::Aes>("aes_node");
+}
 
 // void Basic::getkey() {}
 // {

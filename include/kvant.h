@@ -39,6 +39,8 @@ using namespace CryptoPP;
 #include <kvant/CryptString.h>
 #include <kvant/Set_key.h>
 #include <sensor_msgs/Image.h>
+#include <kvant/Aes.h>
+
 
 class Basic
 {
@@ -47,6 +49,7 @@ class Basic
         virtual ~Basic() {}
 
     protected:
+        ros::NodeHandle nh_;
         uint8_t T;
         unsigned int pos_a;             // absolute position in the key
         unsigned int pos_r;             // relative position in the key
@@ -54,6 +57,8 @@ class Basic
 
         std::vector<uint8_t> key;
         std::queue<std::pair<unsigned int, unsigned int> > cam_key;
+        ros::ServiceClient aes_client;
+
 };
 
 class Slave: public Basic
@@ -64,7 +69,6 @@ class Slave: public Basic
         void spin();
 
     protected:
-        ros::NodeHandle nh_;
         ros::Subscriber data_sub;
         ros::Publisher cmd_vel_pub;
         ros::Subscriber video_sub;
@@ -87,7 +91,6 @@ class Master: public Basic {
         void spin();
 
     protected:
-        ros::NodeHandle nh_;
         ros::Subscriber sub_joy;
         ros::Publisher pub_open_chanel_data;
         ros::Subscriber sub_open_chanel_video;

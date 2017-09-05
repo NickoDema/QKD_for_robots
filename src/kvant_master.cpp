@@ -184,6 +184,7 @@ std::vector<uint8_t> Master::make_data(std::vector<uint8_t> cmd,
       data.push_back(0);  // L == 0; т.е. команды управления нет (TODO: ИЗБАВИТЬСЯ)
     }
     data.push_back(T);
+    cam_key.push(std::make_pair(pos_a, pos_a + T));
   }
   return data;
 }
@@ -246,6 +247,7 @@ std::vector<char*> Master::getAvalibleKeyNames() {
 }
 
 std::vector<uint8_t> Master::decrypt(std::vector<uint8_t> encrypt_video) {
+
   std::vector<uint8_t> data;
 
   std::pair<unsigned int, unsigned int> key_frame = cam_key.front();
@@ -277,6 +279,24 @@ std::vector<uint8_t> Master::decrypt(std::vector<uint8_t> encrypt_video) {
   std::copy(recover.begin(), recover.end(), std::back_inserter(data));
 
   return data;
+
+  // std::vector<uint8_t> video;
+  // if (!cam_key.empty()) {
+  //   std::pair<unsigned int, unsigned int> key_frame = cam_key.front();
+  //   cam_key.pop();
+  //   kvant::Aes aes_srv;
+  //   // 1. select mode of aes encr/decr
+  //   aes_srv.request.mode = 0; // decryption
+  //   // 2. add to service request KEY
+  //   for (int i = key_frame.first; i < key_frame.second; i++) {
+  //     aes_srv.request.key.push_back(key[i]);
+  //   }
+  //   // 3. add to service request DATA
+  //   aes_srv.request.req_data = video;
+  //   aes_client.call(aes_srv);
+  //   video = aes_srv.response.resp_data;
+  // }
+  // return video;
 }
 
 void Master::reciveCallback(const kvant::CryptString::ConstPtr& msg) {

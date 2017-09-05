@@ -1,0 +1,5 @@
+bool mode
+uint8[] key
+uint8[] req_data
+---
+uint8[] resp_data
