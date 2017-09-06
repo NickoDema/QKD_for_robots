@@ -10,8 +10,8 @@
 #ifndef KVANT_
 #define KVANT_
 
-#define HEIGHT 480              // Высота изображения в пикселях
-#define WIDTH 640               // Ширина изображения в пикселях
+#define HEIGHT 240              // Высота изображения в пикселях
+#define WIDTH 320               // Ширина изображения в пикселях
 #define VIDEO_KEY_L 16          // Длинна ключа для одного фрейма в байтах
 //#define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 

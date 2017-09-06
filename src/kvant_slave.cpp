@@ -12,11 +12,11 @@
 
 Slave::Slave(std::string path): Basic()
 {
-    video_sub = nh_.subscribe("/robotino/camera", 4, &Slave::robotino_video_cb, this);
-    data_sub = nh_.subscribe("/open_chanel_data", 4, &Slave::encrypt_data_cb, this);
+    video_sub = nh_.subscribe("/image_raw", 3, &Slave::robotino_video_cb, this);
+    data_sub = nh_.subscribe("/open_chanel_data", 40, &Slave::encrypt_data_cb, this);
 
     cmd_vel_pub = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
-    video_pub = nh_.advertise<kvant::CryptString>("/open_chanel_video", 25, true);
+    video_pub = nh_.advertise<kvant::CryptString>("/open_chanel_video", 30, true);
 
     getkey_srv = nh_.advertiseService("set_key", &Slave::key_extend, this);
     clog << "Slave init" << endl;
@@ -56,7 +56,7 @@ void Slave::encrypt_data_cb(const kvant::CryptStringConstPtr& msg)
     clog << "______________________" << endl;
     clog << "data_cb in" << endl;
     clog << "Key size: " << key.size() << endl;
-    clog << "pos_a in: " << pos_a << endl;
+    //clog << "pos_a in: " << pos_a << endl;
     std::vector<uint8_t> data;
     geometry_msgs::Twist cmd_msg;
 
@@ -114,10 +114,10 @@ void Slave::encrypt_data_cb(const kvant::CryptStringConstPtr& msg)
                 pos_a += (unsigned int)data[data_size-1];
             }
         }
-        clog << "cmd before: " << static_cast<int>(data[0]) << " "
-             << static_cast<int>(data[1]) << " "
-             << static_cast<int>(data[2]) << " "
-             << static_cast<int>(data[3]) << endl;
+        // clog << "cmd before: " << static_cast<int>(data[0]) << " "
+        //      << static_cast<int>(data[1]) << " "
+        //      << static_cast<int>(data[2]) << " "
+        //      << static_cast<int>(data[3]) << endl;
         cmd_msg.linear.x = ((float)data[1]-125)/125;// * scale_linear_;
         cmd_msg.linear.y = ((float)data[2]-125)/125;// * scale_linear_;
         cmd_msg.angular.z = ((float)data[3]-125)/125;// * scale_angular_;
@@ -147,7 +147,7 @@ void Slave::robotino_video_cb(const sensor_msgs::ImageConstPtr& msg)
     kvant::CryptString video_msg;
     if (!cam_key.empty())
     {
-        clog << "video_cb in" << endl;
+        //clog << "video_cb in" << endl;
 
         std::pair<unsigned int, unsigned int> key_frame = cam_key.front();
         cam_key.pop();
@@ -207,10 +207,10 @@ void Slave::robotino_video_cb(const sensor_msgs::ImageConstPtr& msg)
         // Set cipher text length now that its known
         cipher.resize(cs.TotalPutLength());
 
-         std::cout << "Cipher text: ";
+        // std::cout << "Cipher text: ";
         // encoder.Put(cipher.data(), cipher.size());
         // encoder.MessageEnd();
-         std::cout << std::endl;
+        // std::cout << std::endl;
 
         // CryptoPP::AES::Encryption en_aes(key_aes, CryptoPP::AES::DEFAULT_KEYLENGTH);
         // CryptoPP::CBC_Mode_ExternalCipher::Encryption en_cbc(en_aes, iv_aes);
@@ -240,12 +240,12 @@ void Slave::robotino_video_cb(const sensor_msgs::ImageConstPtr& msg)
                 //   "video frames!");
         return;
     }
-    clog << "video_cb out" << endl;
+    // clog << "video_cb out" << endl;
 }
 
 void Slave::spin()
 {
-    ros::Rate R(20);
+    ros::Rate R(15);
     while(nh_.ok())
     {
         ros::spinOnce();

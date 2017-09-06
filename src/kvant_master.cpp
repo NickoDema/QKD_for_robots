@@ -10,13 +10,13 @@
 #include "kvant.h"
 
 Master::Master(std::string path) : Basic(), camera_enable(false) {
-  sub_joy = nh_.subscribe("/joy", 10, &Master::joyCallback, this);
-  sub_open_chanel_video = nh_.subscribe("/open_chanel_video", 10, &Master::reciveCallback, this);
+  sub_joy = nh_.subscribe("/joy", 1, &Master::joyCallback, this);
+  sub_open_chanel_video = nh_.subscribe("/open_chanel_video", 30, &Master::reciveCallback, this);
   pub_open_chanel_data = nh_.advertise<kvant::CryptString>("/open_chanel_data", 10);
-  pub_video = nh_.advertise<sensor_msgs::Image>("/camera", 10);
+  pub_video = nh_.advertise<sensor_msgs::Image>("/camera", 1);
 
   set_key_client = nh_.serviceClient<kvant::Set_key>("/slave/set_key");
-  ros::Duration(1).sleep();
+  ros::Duration(0.3).sleep();
   // expandKey();
   ROS_INFO("Master init!");
 }
@@ -30,8 +30,8 @@ void Master::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
     float right_x = joy_msg->axes[2]; // rotation move
     // float right_y = joy_msg->axes[3]; // dont use
 
-    clog << "cmd before: " << left_x<< " " << left_y << " "
-         << right_x << endl;
+    //clog << "cmd before: " << left_x<< " " << left_y << " "
+    // << right_x << endl;
 
     // команда остановки
     bool stop_robot = joy_msg->buttons[3];
@@ -52,8 +52,8 @@ void Master::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
     // когда нажаты соответстующие кнопки
     std::vector<uint8_t> cmd;
     if (left_x != 0 || left_y != 0 || right_x != 0) {
-      cmd.push_back(left_x * 125 + 125);
       cmd.push_back(left_y * 125 + 125);
+      cmd.push_back(left_x * 125 + 125);
       cmd.push_back(right_x * 125 + 125);
     } else {
       if (stop_robot == true) {
@@ -67,7 +67,7 @@ void Master::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
     data = make_data(cmd, camera_enable);
     if (data.size() > 0) {
 
-      std::clog << "---\nData sent: ";
+      std::clog << "\n______________\nData sent: ";
       for (int i = 0; i < data.size(); i++) {
         std::clog << static_cast<int>(data[i]) << " ";
       }
@@ -97,8 +97,6 @@ void Master::send(std::vector<uint8_t> data) {
   //   std::clog << static_cast<int>(decrypt_data[i]) << " ";
   // }
 
-  std::clog << "\n---";
-
   kvant::CryptString msg;
   for(int i = 0; i < encrypt_data.size(); i++) {
     msg.crypt_string.push_back(encrypt_data[i]);
@@ -117,7 +115,7 @@ std::vector<uint8_t> Master::encrypt(std::vector<uint8_t> data) {
 
   std::clog << "Need length of the key: " << need_memory
             << "\nThe rest of the key: " << key.size() - pos_a
-            << "\nPosition on the key (abs.): "<< pos_a
+            //<< "\nPosition on the key (abs.): "<< pos_a
             << "\n";
 
   for (int i = 0; i < data.size(); i++) {
@@ -135,7 +133,7 @@ std::vector<uint8_t> Master::encrypt(std::vector<uint8_t> data) {
       pos_a += T;
   }
 
-  std::clog << "\nPosition on the key (abs.): "<< pos_a
+  std::clog << "Position on the key (abs.): "<< pos_a
             << "\n";
   return encrypt_data;
 }
