@@ -40,7 +40,7 @@ void Master::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
     bool switch_camera = joy_msg->buttons[0]; // switch camera
     if (switch_camera == true) {
       camera_enable = !camera_enable;
-      ros::Duration(0.5).sleep();
+      ros::Duration(0.2).sleep();
       if (camera_enable == true) {
         ROS_INFO("Camera turn on!");
       } else {
@@ -126,11 +126,15 @@ std::vector<uint8_t> Master::encrypt(std::vector<uint8_t> data) {
     //           << static_cast<int>(key[i + pos_a]) << " = "
     //           << static_cast<int>(data[i] ^ key[i + pos_a]) << std::endl;
   }
-  if (camera_enable == true) {
-    pos_a += data.size() + T;
-  } else {
-    pos_a += data.size();
+  pos_a += data.size();
+  if (camera_enable == true)
+  {
+      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      clog << "put in Q: " << pos_a << " | " << pos_a + T << endl;
+      cam_key.push(std::make_pair(pos_a, pos_a + T));
+      pos_a += T;
   }
+
   std::clog << "\nPosition on the key (abs.): "<< pos_a
             << "\n";
   return encrypt_data;
@@ -163,7 +167,6 @@ bool Master::expandKey() {
     set_key_client.call(srv);
   } else {
     std::clog << "Waiting for kyes...";
-    // TODO: wait :) ????
   }
   ROS_INFO("Fresh key size: %d", static_cast<int>(key.size() - pos_a));
   return 1;
@@ -190,11 +193,10 @@ std::vector<uint8_t> Master::make_data(std::vector<uint8_t> cmd,
   }
   if (camera_enable == true) {
     if (data.size() == 0) {
-      data.push_back(0);  // L == 0; т.е. команды управления нет (TODO: ИЗБАВИТЬСЯ)
+      data.push_back(0);  // L == 0; т.е. команды управления нет
     }
     data.push_back(T);
-    clog << "put in Q: " << pos_a << " | " << pos_a + T << endl;
-    cam_key.push(std::make_pair(pos_a, pos_a + T));
+
   }
   return data;
 }

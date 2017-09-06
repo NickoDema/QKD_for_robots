@@ -109,7 +109,7 @@ void Slave::encrypt_data_cb(const kvant::CryptStringConstPtr& msg)
             }
             else
             {
-                clog << "put in Q: " << pos_a << " | " << pos_a+data[data_size-1] << endl;
+                clog << "put in Q1: " << pos_a << " | " << pos_a+data[data_size-1] << endl;
                 cam_key.push(std::make_pair(pos_a,pos_a+data[data_size-1]));
                 pos_a += (unsigned int)data[data_size-1];
             }
@@ -127,7 +127,7 @@ void Slave::encrypt_data_cb(const kvant::CryptStringConstPtr& msg)
     }
     else
     {
-        clog << "put in Q: " << pos_a << " | " << pos_a+data[data_size-1] << endl;
+        clog << "put in Q2: " << pos_a << " | " << pos_a+data[data_size-1] << endl;
         cam_key.push(std::make_pair(pos_a,pos_a+data[data_size-1]));
         pos_a += (unsigned int)data[data_size-1];
     }
