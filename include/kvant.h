@@ -16,6 +16,7 @@
 //#define ARRAY_SIZE(array) (sizeof((array))/sizeof((array[0])))
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <cstdlib>

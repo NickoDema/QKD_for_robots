@@ -16,7 +16,7 @@ Slave::Slave(std::string path): Basic()
     data_sub = nh_.subscribe("/open_chanel_data", 40, &Slave::encrypt_data_cb, this);
 
     cmd_vel_pub = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
-    video_pub = nh_.advertise<kvant::CryptString>("/open_chanel_video", 30, true);
+    video_pub = nh_.advertise<kvant::CryptString>("/open_chanel_video", 60, true);
 
     getkey_srv = nh_.advertiseService("set_key", &Slave::key_extend, this);
     clog << "Slave init" << endl;
@@ -245,7 +245,7 @@ void Slave::robotino_video_cb(const sensor_msgs::ImageConstPtr& msg)
 
 void Slave::spin()
 {
-    ros::Rate R(15);
+    ros::Rate R(4);
     while(nh_.ok())
     {
         ros::spinOnce();

@@ -13,10 +13,12 @@ Master::Master(std::string path) : Basic(), camera_enable(false) {
   sub_joy = nh_.subscribe("/joy", 1, &Master::joyCallback, this);
   sub_open_chanel_video = nh_.subscribe("/open_chanel_video", 30, &Master::reciveCallback, this);
   pub_open_chanel_data = nh_.advertise<kvant::CryptString>("/open_chanel_data", 10);
-  pub_video = nh_.advertise<sensor_msgs::Image>("/camera", 1);
+  pub_video = nh_.advertise<sensor_msgs::Image>("/camera", 2);
 
   set_key_client = nh_.serviceClient<kvant::Set_key>("/slave/set_key");
   ros::Duration(0.3).sleep();
+  std::cout.setf(std::ios_base::fixed, std::ios_base::floatfield);
+  std::cout.precision(2);
   // expandKey();
   ROS_INFO("Master init!");
 }
@@ -67,10 +69,14 @@ void Master::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
     data = make_data(cmd, camera_enable);
     if (data.size() > 0) {
 
-      std::clog << "\n______________\nData sent: ";
-      for (int i = 0; i < data.size(); i++) {
-        std::clog << static_cast<int>(data[i]) << " ";
-      }
+      std::clog << "\n_________________________"
+                   "___________________________________\nPlain data:\t";
+    //   for (int i = 0; i < data.size(); i++) {
+    //     std::clog << static_cast<int>(data[i]) << " ";
+    //   }
+      std::clog<< std::fixed << std::setprecision(2) << "x: " << left_y << " \t";
+      std::clog<< std::fixed << std::setprecision(2) << "y: " << left_x << " \t";
+      std::clog<< std::fixed << std::setprecision(2) << "z: " << right_x;
       std::clog << std::endl;
 
       send(data);
@@ -82,9 +88,10 @@ void Master::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg) {
 void Master::send(std::vector<uint8_t> data) {
   std::vector<uint8_t> encrypt_data = Master::encrypt(data);
 
-  std::clog << "Data encrypted: ";
-  for (int i = 0; i < encrypt_data.size(); i++) {
-    std::clog << static_cast<int>(encrypt_data[i]) << " ";
+  std::clog << "Encrypted data:\t";
+  for (int i = 1; i < encrypt_data.size(); i++) {
+    //std::clog << static_cast<int>(encrypt_data[i]) << " ";
+    std::clog << "   " << encrypt_data[i] << "\t\t";
   }
 
   // decryption test for only
@@ -113,10 +120,10 @@ std::vector<uint8_t> Master::encrypt(std::vector<uint8_t> data) {
     expandKey();
   }
 
-  std::clog << "Need length of the key: " << need_memory
-            << "\nThe rest of the key: " << key.size() - pos_a
-            //<< "\nPosition on the key (abs.): "<< pos_a
-            << "\n";
+  // std::clog << "Need length of the key: " << need_memory
+  //           << "\nThe rest of the key: " << key.size() - pos_a
+  //           //<< "\nPosition on the key (abs.): "<< pos_a
+  //           << "\n";
 
   for (int i = 0; i < data.size(); i++) {
     encrypt_data.push_back(data[i] ^ key[i + pos_a]);
@@ -128,13 +135,12 @@ std::vector<uint8_t> Master::encrypt(std::vector<uint8_t> data) {
   if (camera_enable == true)
   {
       // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      clog << "put in Q: " << pos_a << " | " << pos_a + T << endl;
+      //clog << "put in Q: " << pos_a << " | " << pos_a + T << endl;
       cam_key.push(std::make_pair(pos_a, pos_a + T));
       pos_a += T;
   }
 
-  std::clog << "Position on the key (abs.): "<< pos_a
-            << "\n";
+  //std::clog << "Position on the key (abs.): "<< pos_a << "\n";
   return encrypt_data;
 }
 
