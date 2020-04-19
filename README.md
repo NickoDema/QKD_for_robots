@@ -1,7 +1,7 @@
 ## Quantum key distribution implementation for mobile robots
 
-![experiment](https://github.com/NickoDema/QKD_for_robots/blob/second_iteration/docs/pics/experiment.png)
-[Project description](https://github.com/NickoDema/QKD_for_robots/blob/second_iteration/docs/Description_SCWQKD-Robots.pdf)
+![experiment](docs/pics/experiment.png)
+[Project description](docs/Description_SCWQKD-Robots.pdf)
 
 
 ## Dependencies
